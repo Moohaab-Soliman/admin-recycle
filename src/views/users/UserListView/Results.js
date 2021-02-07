@@ -4,6 +4,8 @@ import clsx from 'clsx';
 import numeral from 'numeral';
 import PropTypes from 'prop-types';
 import PerfectScrollbar from 'react-perfect-scrollbar';
+import moment from 'moment';
+
 import {
   Avatar,
   Box,
@@ -72,16 +74,16 @@ const sortOptions = [
   }
 ];
 
-const applyFilters = (customers, query, filters) => {
-  return customers.filter(customer => {
+const applyFilters = (users, query, filters) => {
+  return users.filter(user => {
     let matches = true;
 
     if (query) {
-      const properties = ['email', 'name'];
+      const properties = ['email', 'firstName'];
       let containsQuery = false;
 
       properties.forEach(property => {
-        if (customer[property].toLowerCase().includes(query.toLowerCase())) {
+        if (user[property].toLowerCase().includes(query.toLowerCase())) {
           containsQuery = true;
         }
       });
@@ -94,7 +96,7 @@ const applyFilters = (customers, query, filters) => {
     Object.keys(filters).forEach(key => {
       const value = filters[key];
 
-      if (value && customer[key] !== value) {
+      if (value && user[key] !== value) {
         matches = false;
       }
     });
@@ -103,8 +105,8 @@ const applyFilters = (customers, query, filters) => {
   });
 };
 
-const applyPagination = (customers, page, limit) => {
-  return customers.slice(page * limit, page * limit + limit);
+const applyPagination = (users, page, limit) => {
+  return users.slice(page * limit, page * limit + limit);
 };
 
 const descendingComparator = (a, b, orderBy) => {
@@ -125,10 +127,10 @@ const getComparator = (order, orderBy) => {
     : (a, b) => -descendingComparator(a, b, orderBy);
 };
 
-const applySort = (customers, sort) => {
+const applySort = (users, sort) => {
   const [orderBy, order] = sort.split('|');
   const comparator = getComparator(order, orderBy);
-  const stabilizedThis = customers.map((el, index) => [el, index]);
+  const stabilizedThis = users.map((el, index) => [el, index]);
 
   stabilizedThis.sort((a, b) => {
     const order = comparator(a[0], b[0]);
@@ -168,7 +170,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const Results = ({ className, customers, ...rest }) => {
+const Results = ({ className, users, ...rest }) => {
   const classes = useStyles();
   const [currentTab, setCurrentTab] = useState('all');
   const [selectedCustomers, setSelectedCustomers] = useState([]);
@@ -211,7 +213,7 @@ const Results = ({ className, customers, ...rest }) => {
 
   const handleSelectAllCustomers = event => {
     setSelectedCustomers(
-      event.target.checked ? customers.map(customer => customer.id) : []
+      event.target.checked ? users.map(customer => customer.id) : []
     );
   };
 
@@ -233,13 +235,13 @@ const Results = ({ className, customers, ...rest }) => {
     setLimit(parseInt(event.target.value));
   };
 
-  const filteredCustomers = applyFilters(customers, query, filters);
+  const filteredCustomers = applyFilters(users, query, filters);
   const sortedCustomers = applySort(filteredCustomers, sort);
   const paginatedCustomers = applyPagination(sortedCustomers, page, limit);
   const enableBulkOperations = selectedCustomers.length > 0;
   const selectedSomeCustomers =
-    selectedCustomers.length > 0 && selectedCustomers.length < customers.length;
-  const selectedAllCustomers = selectedCustomers.length === customers.length;
+    selectedCustomers.length > 0 && selectedCustomers.length < users.length;
+  const selectedAllCustomers = selectedCustomers.length === users.length;
 
   return (
     <Card className={clsx(classes.root, className)} {...rest}>
@@ -319,69 +321,58 @@ const Results = ({ className, customers, ...rest }) => {
                   />
                 </TableCell>
                 <TableCell>Name</TableCell>
-                <TableCell>Location</TableCell>
-                <TableCell>Orders</TableCell>
-                <TableCell>Spent</TableCell>
+                <TableCell>Mobile</TableCell>
+
+                <TableCell>Created At</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginatedCustomers.map(customer => {
-                const isCustomerSelected = selectedCustomers.includes(
-                  customer.id
-                );
+              {paginatedCustomers.map(user => {
+                const isCustomerSelected = selectedCustomers.includes(user._id);
 
                 return (
-                  <TableRow
-                    hover
-                    key={customer.id}
-                    selected={isCustomerSelected}
-                  >
+                  <TableRow hover key={user._id} selected={isCustomerSelected}>
                     <TableCell padding="checkbox">
                       <Checkbox
                         checked={isCustomerSelected}
                         onChange={event =>
-                          handleSelectOneCustomer(event, customer.id)
+                          handleSelectOneCustomer(event, user._id)
                         }
                         value={isCustomerSelected}
                       />
                     </TableCell>
                     <TableCell>
                       <Box display="flex" alignItems="center">
-                        <Avatar
-                          className={classes.avatar}
-                          src={customer.avatar}
-                        >
-                          {getInitials(customer.name)}
+                        <Avatar className={classes.avatar} src={user.avatar}>
+                          {getInitials(user.firstName)}
                         </Avatar>
                         <div>
                           <Link
+                            key={user._id}
                             color="inherit"
                             component={RouterLink}
-                            to="/app/management/customers/1"
+                            to="/app/management/users/"
                             variant="h6"
                           >
-                            {customer.name}
+                            {user.firstName + ' ' + user.lastName}
                           </Link>
                           <Typography variant="body2" color="textSecondary">
-                            {customer.email}
+                            {user.email}
                           </Typography>
                         </div>
                       </Box>
                     </TableCell>
+                    <TableCell>{user.mobile}</TableCell>
+
                     <TableCell>
-                      {`${customer.city}, ${customer.state}, ${customer.country}`}
-                    </TableCell>
-                    <TableCell>{customer.totalOrders}</TableCell>
-                    <TableCell>
-                      {numeral(customer.totalAmountSpent).format(
-                        `${customer.currency}0,0.00`
-                      )}
+                      {moment.unix(user.createdAt / 1000).format('DD MM YYYY')}
                     </TableCell>
                     <TableCell align="right">
                       <IconButton
+                        key={user._id}
                         component={RouterLink}
-                        to="/app/management/customers/1/edit"
+                        to={'/app/management/users/' + user._id + '/edit'}
                       >
                         <SvgIcon fontSize="small">
                           <EditIcon />
@@ -389,7 +380,7 @@ const Results = ({ className, customers, ...rest }) => {
                       </IconButton>
                       <IconButton
                         component={RouterLink}
-                        to="/app/management/customers/1"
+                        to={'/app/management/users/' + user._id}
                       >
                         <SvgIcon fontSize="small">
                           <ArrowRightIcon />

@@ -12,3 +12,4 @@ import './project';
 import './reports';
 import './search';
 import './social';
+import './users';

@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Box, Container, makeStyles } from '@material-ui/core';
 import axios from 'src/utils/axios';
 import Page from 'src/components/Page';
 import useIsMountedRef from 'src/hooks/useIsMountedRef';
+import CustomerEditForm from './CustomerEditForm';
 import Header from './Header';
-import Results from './Results';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -15,17 +15,17 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const CustomerListView = () => {
+const CustomerEditView = () => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
-  const [customers, setCustomers] = useState([]);
+  const [user, setUser] = useState(null);
 
-  const getCustomers = useCallback(async () => {
+  const getUser = useCallback(async () => {
     try {
-      const response = await axios.get('/api/customers');
+      const response = await axios.get('/api/users/1');
 
       if (isMountedRef.current) {
-        setCustomers(response.data.customers);
+        setUser(response.data.user);
       }
     } catch (err) {
       console.error(err);
@@ -33,19 +33,25 @@ const CustomerListView = () => {
   }, [isMountedRef]);
 
   useEffect(() => {
-    getCustomers();
-  }, [getCustomers]);
+    getUser();
+  }, [getUser]);
+
+  if (!user) {
+    return null;
+  }
 
   return (
-    <Page className={classes.root} title="Customer List">
+    <Page className={classes.root} title="Customer Edit">
       <Container maxWidth={false}>
         <Header />
-        <Box mt={3}>
-          <Results customers={customers} />{' '}
-        </Box>
       </Container>
+      <Box mt={3}>
+        <Container maxWidth="lg">
+          <CustomerEditForm user={user} />
+        </Container>
+      </Box>
     </Page>
   );
 };
 
-export default CustomerListView;
+export default CustomerEditView;

@@ -18,14 +18,14 @@ const useStyles = makeStyles(theme => ({
 const CustomerListView = () => {
   const classes = useStyles();
   const isMountedRef = useIsMountedRef();
-  const [customers, setCustomers] = useState([]);
+  const [users, setUsers] = useState([]);
 
-  const getCustomers = useCallback(async () => {
+  const getUsers = useCallback(async () => {
     try {
-      const response = await axios.get('/api/customers');
+      const response = await axios.get('/api/users');
 
       if (isMountedRef.current) {
-        setCustomers(response.data.customers);
+        setUsers(response.data.users);
       }
     } catch (err) {
       console.error(err);
@@ -33,15 +33,15 @@ const CustomerListView = () => {
   }, [isMountedRef]);
 
   useEffect(() => {
-    getCustomers();
-  }, [getCustomers]);
+    getUsers();
+  }, [getUsers]);
 
   return (
     <Page className={classes.root} title="Customer List">
       <Container maxWidth={false}>
         <Header />
         <Box mt={3}>
-          <Results customers={customers} />{' '}
+          <Results users={users} />{' '}
         </Box>
       </Container>
     </Page>
